@@ -3,6 +3,7 @@ import os
 import subprocess
 from psutil import virtual_memory
 import requests
+import re
 
 app = Flask(__name__)
 
@@ -93,10 +94,20 @@ def hostname():
 def __ip():
     res_ip = subprocess.run(["ip", "a"], capture_output=True)
     ip = res_ip.stdout
-    res_global_ip = requests.get(
-        "http://ifconfig.io", headers={'User-Agent': 'curl'})
+    res_global_ip = subprocess.run(
+        ["dig", "@8.8.8.8", "-t", "txt", "o-o.myaddr.l.google.com",
+            "+short", "+time=2", "+tries=2"],
+        capture_output=True)
+    global_ips = res_global_ip.stdout.decode().strip().split("\n")
+    filtered_global_ips = [ip for ip in global_ips if "client-subnet" in ip]
+    global_ip = "Failed to get global ip"
+    if len(filtered_global_ips) == 1:
+        str_global_ip = filtered_global_ips[0]
+        m = re.search(r"client-subnet (.+)/", str_global_ip)
+        if m:
+            global_ip = m.group(1)
     return {
-        "globalIp": res_global_ip.text.strip(),
+        "globalIp": global_ip,
         "ip": ip.decode().strip().split("\n")
     }
 
@@ -194,7 +205,7 @@ def ping(dst=None):
     `ping` to dst
     """
     res = subprocess.run(
-        ["ping", "-c", "1", dst], capture_output=True)
+        ["ping", "-W", "2", "-c", "1", dst], capture_output=True)
     ping = res.stdout
     return jsonify({
         "ping": ping.decode().strip().split("\n")
@@ -207,10 +218,10 @@ def dig(dst=None):
     Resolve name by default name server
     """
     res = subprocess.run(
-        ["dig", dst], capture_output=True)
-    dig = res.stdout
+        ["dig", "+time=2", "+tries=2", dst], capture_output=True)
     return jsonify({
-        "dig": dig.decode().strip().split("\n")
+        "dig": res.stdout.decode().strip().split("\n") +
+        res.stderr.decode().strip().split("\n")
     })
 
 
@@ -219,7 +230,7 @@ def get(dst=None):
     """
     Exec a http get request to dst
     """
-    res = requests.get(dst)
+    res = requests.get(dst, timeout=(2, 2))
     return jsonify({
         "statusCode": res.status_code,
         "headers": dict(res.headers),
