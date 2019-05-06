@@ -1,7 +1,7 @@
 FROM python:3.7-stretch
 LABEL MAINTAINER "amaya <mail@sapphire.in.net>"
 
-COPY ./k8s-debugkit.py /opt/k8s-debugkit/k8s-debugkit.py
+COPY . /opt/k8s-debugkit
 WORKDIR /opt/k8s-debugkit
 
 RUN set -eux && \
