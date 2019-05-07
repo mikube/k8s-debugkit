@@ -22,6 +22,7 @@ def index():
             "/exec/echo",
             "/exec/ping/<dst>",
             "/exec/dig/<dst>",
+            "/exec/traceroute/<dst>",
             "/exec/get/<path:dst>",
             "/exec/ls/<path:path>",
             "/exec/getenv/<name>"]
@@ -202,7 +203,7 @@ def echo():
 @app.route("/exec/ping/<dst>")
 def ping(dst=None):
     """
-    `ping` to dst
+    ping to dst
     """
     res = subprocess.run(
         ["ping", "-W", "2", "-c", "1", dst], capture_output=True)
@@ -221,6 +222,19 @@ def dig(dst=None):
         ["dig", "+time=2", "+tries=2", dst], capture_output=True)
     return jsonify({
         "dig": res.stdout.decode().strip().split("\n") +
+        res.stderr.decode().strip().split("\n")
+    })
+
+
+@app.route("/exec/traceroute/<dst>")
+def traceroute(dst=None):
+    """
+    traceroute to dst
+    """
+    res = subprocess.run(
+        ["traceroute", "-w", "2", dst], capture_output=True)
+    return jsonify({
+        "traceroute": res.stdout.decode().strip().split("\n") +
         res.stderr.decode().strip().split("\n")
     })
 

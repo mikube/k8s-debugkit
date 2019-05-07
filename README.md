@@ -1,16 +1,17 @@
-# k8s-debugkit
+<h1 align="center">k8s-debugkit</h1>
+
 All-in-one docker image for debugging on Kubernetes and Docker
 
 **Note: Insecure, only for debugging**
 
 
-## Use cases
+# :soon: Use cases
 ```sh
 kubectl create deploy --image=amaya382/k8s-debugkit debugkit
 kubectl expose --port=80 --type={type you need} deploy debugkit
 ```
 
-### (1) Want to know which global ip is used
+## (1) Want to know which global ip is used
 ```
 wget http://{debugkit's ip addr}/info/ip
 ```
@@ -37,7 +38,7 @@ wget http://{debugkit's ip addr}/info/ip
 A global ip k8s environment uses by default is `XXX.XXX.XXX.XXX`
 
 
-### (2) Want to know which pod you're actually accessing (Good for accessing via a load balancer)
+## (2) Want to know which pod you're actually accessing (Good for accessing via a load balancer)
 ```
 wget http://{debugkit's ip addr}/info/hostname
 ```
@@ -50,7 +51,7 @@ wget http://{debugkit's ip addr}/info/hostname
 hostname means pod name on k8s
 
 
-### (3) Want to check if the default name server is working or not
+## (3) Want to check if the default name server is working or not
 ```
 wget http://{debugkit's ip addr}/exec/dig/google.com
 ```
@@ -82,6 +83,7 @@ wget http://{debugkit's ip addr}/exec/dig/google.com
 Working! Succeeded in resolving `google.com`
 
 
+# :trident: Features
 ## HTTP Server
 k8s-debugkit provides a HTTP server returning information and executing some commands from pod (container).
 You can check a lot of pod information by using just HTTP GET.
@@ -116,13 +118,19 @@ Get `/etc/resolv.conf`
 Get all environmental values
 
 ### Command execution
-You can execute commands via HTTP GET
+You can execute commands (from container!) via HTTP GET
+
+#### `/exec/echo/<dst>`
+echo POST data
 
 #### `/exec/ping/<dst>`
-echo POST data
+ping to dst
 
 #### `/exec/dig/<dst>`
 Resolve name by default name server
+
+#### `/exec/traceroute/<dst>`
+traceroute to dst
 
 #### `/exec/get/<dst>`
 Exec a http get request to dst
@@ -135,7 +143,7 @@ Get an environmental value by name
 
 
 ## CLI Tools
-You can use CLI tools below on pod (container)
+You can directly use the CLI tools below on container by `kubectl exec -it {pod_name} bash` or `docker exec -it {container_name} bash`
 
 * `kubectl`
 * `ping`
