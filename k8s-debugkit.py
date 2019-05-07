@@ -203,7 +203,7 @@ def echo():
 @app.route("/exec/ping/<dst>")
 def ping(dst=None):
     """
-    `ping` to dst
+    ping to dst
     """
     res = subprocess.run(
         ["ping", "-W", "2", "-c", "1", dst], capture_output=True)
