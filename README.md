@@ -11,6 +11,12 @@ kubectl create deploy --image=amaya382/k8s-debugkit debugkit
 kubectl expose --port=80 --type={type you need} deploy debugkit
 ```
 
+or
+
+```sh
+kubectl apply -f k8s-debugkit.yaml # Default svc type: NodePort
+```
+
 ## (1) Want to know which global ip is used
 ```
 wget http://{debugkit's ip addr}/info/ip
