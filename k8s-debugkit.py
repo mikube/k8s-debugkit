@@ -209,6 +209,7 @@ def ping(dst=None):
         ["ping", "-W", "2", "-c", "1", dst], capture_output=True)
     ping = res.stdout
     return jsonify({
+        "hostname": __hostname(),
         "ping": ping.decode().strip().split("\n")
     })
 
@@ -221,6 +222,7 @@ def dig(dst=None):
     res = subprocess.run(
         ["dig", "+time=2", "+tries=2", dst], capture_output=True)
     return jsonify({
+        "hostname": __hostname(),
         "dig": res.stdout.decode().strip().split("\n") +
         res.stderr.decode().strip().split("\n")
     })
@@ -234,6 +236,7 @@ def traceroute(dst=None):
     res = subprocess.run(
         ["traceroute", "-w", "2", dst], capture_output=True)
     return jsonify({
+        "hostname": __hostname(),
         "traceroute": res.stdout.decode().strip().split("\n") +
         res.stderr.decode().strip().split("\n")
     })
@@ -246,6 +249,7 @@ def get(dst=None):
     """
     res = requests.get(dst, timeout=(2, 2))
     return jsonify({
+        "hostname": __hostname(),
         "statusCode": res.status_code,
         "headers": dict(res.headers),
         "body": res.text
@@ -260,6 +264,7 @@ def ls(path=None):
     res = subprocess.run(["ls", "-al", "/"+path], capture_output=True)
     ls = res.stdout
     return jsonify({
+        "hostname": __hostname(),
         "ls": ls.decode().strip().split("\n")
     })
 
@@ -270,6 +275,7 @@ def env(name=None):
     Get an environmental value by name
     """
     return jsonify({
+        "hostname": __hostname(),
         name: os.getenv(name)
     })
 
