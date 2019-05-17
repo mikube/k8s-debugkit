@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: debugkit
+  name: debugkit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: debugkit
+  template:
+    metadata:
+      labels:
+        app: debugkit
+    spec:
+      containers:
+      - image: amaya382/k8s-debugkit:latest
+        imagePullPolicy: Always
+        name: k8s-debugkit
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: debugkit
+  name: debugkit
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: debugkit
+  type: NodePort
