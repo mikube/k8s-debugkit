@@ -77,7 +77,10 @@ wget http://{debugkit's ip addr}/exec/dig/google.com
     ";; SERVER: 10.152.183.10#53(10.152.183.10)",
     ";; WHEN: Mon May 06 07:42:12 UTC 2019",
     ";; MSG SIZE  rcvd: 55"
-  ]
+  ],
+  "hostname": {
+    "hostname": "debugkit-798cb977b-zjvfz"
+  }
 }
 ```
 Working! Succeeded in resolving `google.com`
@@ -120,9 +123,6 @@ Get all environmental values
 ### Command execution
 You can execute commands (from container!) via HTTP GET
 
-#### `/exec/echo/<dst>`
-echo POST data
-
 #### `/exec/ping/<dst>`
 ping to dst
 
@@ -140,6 +140,9 @@ List files
 
 #### `/exec/getenv/<name>`
 Get an environmental value by name
+
+#### `/exec/echo/<dst>`
+echo POST data
 
 
 ## CLI Tools
