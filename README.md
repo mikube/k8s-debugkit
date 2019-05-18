@@ -17,6 +17,9 @@ or
 kubectl apply -f k8s-debugkit.yaml # Default svc type: NodePort
 ```
 
+And then, access to the debugkit via k8s Service, `kubectl port-forward`, or IP addr directly (Need specific env such as microk8s or telepresence)
+
+
 ## (1) Want to know which global ip is used
 ```
 wget http://{debugkit's ip addr}/info/ip
@@ -165,3 +168,7 @@ You can directly use the CLI tools below on container by `kubectl exec -it {pod_
 * `nslookup`
 * `traceroute`
 
+
+## Options
+* `K8S_DEBUGKIT_DISABLE_FLASK_DEBUG_MODE`
+  * If set, run in production mode
