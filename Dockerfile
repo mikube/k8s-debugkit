@@ -14,4 +14,4 @@ RUN set -eux && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-CMD ["python", "k8s-debugkit.py"]
+CMD ["./run.sh"]

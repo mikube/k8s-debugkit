@@ -153,6 +153,14 @@ Get an environmental value by name
 #### `/exec/log/{msg}?{stderr}`
 Print log to stdout. If set stderr, output to stderr.
 
+* `stderr`: Default `False`
+
+#### `/exec/explode?{signal}&{explode_after}`
+Explode the container by `signal` after `explode_after`
+
+* `signal`: Default `9`
+* `explode_after`: Default `5`
+
 #### `/exec/echo/<dst>`
 echo POST data
 

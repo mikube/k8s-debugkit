@@ -1,11 +1,12 @@
 import responder
 import os
 import sys
-import signal
 import subprocess
 from psutil import virtual_memory
 import requests
 import re
+import time
+import datetime
 
 api = responder.API()
 
@@ -28,6 +29,7 @@ def index(req, res):
             "/exec/ls/{path}",
             "/exec/getenv/{name}",
             "/exec/log/{msg}?{mode}",
+            "/exec/explode/?{signal}&{explode_after}",
             "/exec/echo"]
     }
 
@@ -300,6 +302,26 @@ def log(req, res, *, msg):
                 "stderr": stderr != None
             }
         }
+
+
+@api.route("/exec/explode")
+def explode(req, res):
+    signal = req.params.get("signal")
+    explode_after = req.params.get("explode_after")
+    signal = int(signal) if signal != None else 9
+    explode_after = int(explode_after) if explode_after != None else 5
+
+    @api.background.task
+    def __explode(pid, signal, explode_after):
+        time.sleep(explode_after)
+        os.kill(pid, signal)
+
+    __explode(os.getppid(), signal, explode_after)
+
+    res.media = {
+        "hostname": __hostname(),
+        "explode": "Explode by signal {} after {} sec".format(signal, explode_after)
+    }
 
 
 if __name__ == "__main__":
