@@ -10,7 +10,8 @@ RUN set -eux && \
       -O /usr/local/bin/kubectl && \
     chmod +x /usr/local/bin/kubectl && \
     apt update && \
-    apt install -y dnsutils traceroute && \
+    apt install -y nano vim emacs \
+                   dnsutils traceroute && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
