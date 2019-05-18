@@ -27,6 +27,7 @@ def index(req, res):
             "/exec/traceroute/{dst}",
             "/exec/get/{dst}",
             "/exec/ls/{path}",
+            "/exec/cat/{path}",
             "/exec/getenv/{name}",
             "/exec/log/{msg}?{mode}",
             "/exec/explode/?{signal}&{explode_after}",
@@ -193,21 +194,6 @@ def envs(req, res):
     res.media = __envs()
 
 
-@api.route("/exec/echo")
-async def echo(req, res):
-    """
-    echo POST data
-    """
-    if req.method != "post":
-        res.media = {
-            "error": "POST only"
-        }
-        res.status_code = 405
-        return
-
-    res.media = await req.media()
-
-
 @api.route("/exec/ping/{dst}")
 def ping(req, res, *, dst):
     """
@@ -275,6 +261,23 @@ def ls(req, res, *, path):
     }
 
 
+@api.route("/exec/cat/{path}")
+def cat(req, res, *, path):
+    """
+    Get file contents
+    """
+    path = "/" + path
+    if os.path.isfile(path):
+        with open(path, "r") as f:
+            res.media = {
+                path: [l.strip() for l in f.readlines()]
+            }
+    else:
+        res.media = {
+            "error": "{} was not found or not a file".format(path)
+        }
+
+
 @api.route("/exec/getenv/{name}")
 def env(req, res, *, name):
     """
@@ -322,6 +325,21 @@ def explode(req, res):
         "hostname": __hostname(),
         "explode": "Explode by signal {} after {} sec".format(signal, explode_after)
     }
+
+
+@api.route("/exec/echo")
+async def echo(req, res):
+    """
+    echo POST data
+    """
+    if req.method != "post":
+        res.media = {
+            "error": "POST only"
+        }
+        res.status_code = 405
+        return
+
+    res.media = await req.media()
 
 
 if __name__ == "__main__":
