@@ -309,4 +309,5 @@ def log(contents=None):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=80)
+    disable_debug = os.getenv("K8S_DEBUGKIT_DISABLE_FLASK_DEBUG_MODE")
+    app.run(debug=False if disable_debug != None else True, host="0.0.0.0", port=80)
