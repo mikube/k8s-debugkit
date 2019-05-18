@@ -147,6 +147,9 @@ Exec a http get request to dst
 #### `/exec/ls/{path}`
 List files
 
+#### `/exec/cat/{path}`
+Get file contents
+
 #### `/exec/getenv/{name}`
 Get an environmental value by name
 
