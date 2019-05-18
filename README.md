@@ -161,6 +161,7 @@ echo POST data
 You can directly use the CLI tools below on container by `kubectl exec -it {pod_name} bash` or `docker exec -it {container_name} bash`
 
 * `kubectl`
+  * You need pass auth info such as `.kube/config`. e.g. `kubectl cp ~/.kube/config {pod_name}:~/.kube/config`
 * `ping`
 * `curl`
 * `wget`
