@@ -1,38 +1,38 @@
-from flask import Flask, jsonify, request
+import responder
 import os
+import sys
+import signal
 import subprocess
 from psutil import virtual_memory
 import requests
 import re
-import sys
 
-app = Flask(__name__)
+api = responder.API()
 
 
-@app.route("/")
-def index():
+@api.route("/")
+def index(req, res):
     """
     Get all endpoints
     """
-    res = {
+    res.media = {
         "endpoints": [
             "/info/all",
             "/info/common",
             "/info/hostname", "/info/ip", "/info/cpu", "/info/mem",
             "/info/hosts", "/info/resolv", "/info/envs",
-            "/exec/echo",
-            "/exec/ping/<dst>",
-            "/exec/dig/<dst>",
-            "/exec/traceroute/<dst>",
-            "/exec/get/<path:dst>",
-            "/exec/ls/<path:path>",
-            "/exec/getenv/<name>",
-            "/exec/log/<path:contents>?<mode>"]
+            "/exec/ping/{dst}",
+            "/exec/dig/{dst}",
+            "/exec/traceroute/{dst}",
+            "/exec/get/{dst}",
+            "/exec/ls/{path}",
+            "/exec/getenv/{name}",
+            "/exec/log/{msg}?{mode}",
+            "/exec/echo"]
     }
-    return jsonify(res)
 
 
-def __all():
+def __all(req):
     return {
         "hostname": __hostname(),
         "ip": __ip(),
@@ -41,40 +41,37 @@ def __all():
         "hosts": __hosts(),
         "resolv": __resolv(),
         "envs": __envs(),
-        "common": __common()
+        "common": __common(req)
     }
 
 
-@app.route("/info/all")
-def all():
+@api.route("/info/all")
+def all(req, res):
     """
     Get all info in JSON format
     """
-    return jsonify(__all())
+    res.media = __all(req)
 
 
-def __common():
+def __common(req):
     return {
-        "method": request.method,
-        "url": request.url,
-        "baseUrl": request.base_url,
-        "path": request.path,
-        "queryString": request.query_string.decode(),
-        "sourceIp": request.remote_addr,
-        "referrer": request.referrer,
-        "headers": dict(request.headers)
+        "method": req.method,
+        "url": req.url,
+        "fullUrl": req.full_url,
+        "params": req.params,
+        "cookies": req.cookies,
+        "headers": dict(req.headers)
     }
 
 
-@app.route("/info/common")
-def common():
+@api.route("/info/common")
+def common(req, res):
     """
     Get common info based on request context
     """
-    res = {
-        "common": __common()
+    res.media = {
+        "common": __common(req)
     }
-    return jsonify(res)
 
 
 def __hostname():
@@ -85,13 +82,13 @@ def __hostname():
     }
 
 
-@app.route("/info/hostname")
-def hostname():
+@api.route("/info/hostname")
+def hostname(req, res):
     """
     Get hostname
     hostname in container means container id or pod name on k8s
     """
-    return jsonify(__hostname())
+    res.media = __hostname()
 
 
 def __ip():
@@ -115,12 +112,12 @@ def __ip():
     }
 
 
-@app.route("/info/ip")
-def ip():
+@api.route("/info/ip")
+def ip(req, res):
     """
     Get local nic info and global ip
     """
-    return jsonify(__ip())
+    res.media = __ip()
 
 
 def __cpu():
@@ -130,12 +127,12 @@ def __cpu():
     }
 
 
-@app.route("/info/cpu")
-def cpu():
+@api.route("/info/cpu")
+def cpu(req, res):
     """
     Get the number of cpus
     """
-    return jsonify(__cpu())
+    res.media = __cpu()
 
 
 def __mem():
@@ -144,12 +141,12 @@ def __mem():
     }
 
 
-@app.route("/info/mem")
-def mem():
+@api.route("/info/mem")
+def mem(req, res):
     """
     Get the amount of available memory
     """
-    return jsonify(__mem())
+    res.media = __mem()
 
 
 def __hosts():
@@ -159,12 +156,12 @@ def __hosts():
         }
 
 
-@app.route("/info/hosts")
-def hosts():
+@api.route("/info/hosts")
+def hosts(req, res):
     """
     Get /etc/hosts
     """
-    return jsonify(__hosts())
+    res.media = __hosts()
 
 
 def __resolv():
@@ -174,140 +171,137 @@ def __resolv():
         }
 
 
-@app.route("/info/resolv")
-def resolv():
+@api.route("/info/resolv")
+def resolv(req, res):
     """
     Get /etc/resolv.conf
     """
-    return jsonify(__resolv())
+    res.media = __resolv()
 
 
 def __envs():
     return dict(os.environ)
 
 
-@app.route("/info/envs")
-def envs():
+@api.route("/info/envs")
+def envs(req, res):
     """
     Get all environmental values
     """
-    return jsonify(__envs())
+    res.media = __envs()
 
 
-@app.route("/exec/echo", methods=["POST"])
-def echo():
+@api.route("/exec/echo")
+async def echo(req, res):
     """
     echo POST data
     """
-    return request.data
+    if req.method != "post":
+        res.media = {
+            "error": "POST only"
+        }
+        res.status_code = 405
+        return
+
+    res.media = await req.media()
 
 
-@app.route("/exec/ping/<dst>")
-def ping(dst=None):
+@api.route("/exec/ping/{dst}")
+def ping(req, res, *, dst):
     """
     ping to dst
     """
-    res = subprocess.run(
+    result = subprocess.run(
         ["ping", "-W", "2", "-c", "1", dst], capture_output=True)
-    ping = res.stdout
-    return jsonify({
+    res.media = {
         "hostname": __hostname(),
-        "ping": ping.decode().strip().split("\n")
-    })
+        "ping": result.stdout.decode().strip().split("\n")
+    }
 
 
-@app.route("/exec/dig/<dst>")
-def dig(dst=None):
+@api.route("/exec/dig/{dst}")
+def dig(req, res, *, dst):
     """
     Resolve name by default name server
     """
-    res = subprocess.run(
+    result = subprocess.run(
         ["dig", "+time=2", "+tries=2", dst], capture_output=True)
-    return jsonify({
+    res.media = {
         "hostname": __hostname(),
-        "dig": res.stdout.decode().strip().split("\n") +
-        res.stderr.decode().strip().split("\n")
-    })
+        "dig": result.stdout.decode().strip().split("\n") +
+        result.stderr.decode().strip().split("\n")
+    }
 
 
-@app.route("/exec/traceroute/<dst>")
-def traceroute(dst=None):
+@api.route("/exec/traceroute/{dst}")
+def traceroute(req, res, *, dst):
     """
     traceroute to dst
     """
-    res = subprocess.run(
+    result = subprocess.run(
         ["traceroute", "-w", "2", dst], capture_output=True)
-    return jsonify({
+    res.media = {
         "hostname": __hostname(),
-        "traceroute": res.stdout.decode().strip().split("\n") +
-        res.stderr.decode().strip().split("\n")
-    })
+        "traceroute": result.stdout.decode().strip().split("\n") +
+        result.stderr.decode().strip().split("\n")
+    }
 
 
-@app.route("/exec/get/<path:dst>")
-def get(dst=None):
+@api.route("/exec/get/{dst}")
+def get(req, res, *, dst):
     """
     Exec a http get request to dst
     """
-    res = requests.get(dst, timeout=(2, 2))
-    return jsonify({
+    result = requests.get(dst, timeout=(2, 2))
+    res.media = {
         "hostname": __hostname(),
-        "statusCode": res.status_code,
-        "headers": dict(res.headers),
-        "body": res.text
-    })
+        "statusCode": result.status_code,
+        "headers": dict(result.headers),
+        "body": result.text
+    }
 
 
-@app.route("/exec/ls/<path:path>")
-def ls(path=None):
+@api.route("/exec/ls/{path}")
+def ls(req, res, *, path):
     """
     List files
     """
-    res = subprocess.run(["ls", "-al", "/"+path], capture_output=True)
-    ls = res.stdout
-    return jsonify({
+    result = subprocess.run(["ls", "-al", "/"+path], capture_output=True)
+    res.media = {
         "hostname": __hostname(),
-        "ls": ls.decode().strip().split("\n")
-    })
+        "ls": result.stdout.decode().strip().split("\n")
+    }
 
 
-@app.route("/exec/getenv/<name>")
-def env(name=None):
+@api.route("/exec/getenv/{name}")
+def env(req, res, *, name):
     """
     Get an environmental value by name
     """
-    return jsonify({
+    res.media = {
         "hostname": __hostname(),
         name: os.getenv(name)
-    })
+    }
 
 
-@app.route("/exec/log/<path:contents>")
-def log(contents=None):
+@api.route("/exec/log/{msg}")
+def log(req, res, *, msg):
     """
     Print log
     """
-    mode = request.args.get("mode", default="debug")
-    if mode == "debug":
-        app.logger.debug(contents)
-    elif mode == "info":
-        app.logger.info(contents)
-    elif mode == "warn":
-        app.logger.warn(contents)
-    elif mode == "error":
-        app.logger.error(contents)
-    elif mode == "critical":
-        app.logger.critical(contents)
+    stderr = req.params.get("stderr")
+    if stderr == None:
+        print(msg, flush=True)
     else:
-        mode = "debug"
-        app.logger.debug(contents)
-    return jsonify({
-        "hostname": __hostname(),
-        "log": contents,
-        "mode": mode
-    })
+        print(msg, flush=True, file=sys.stderr)
+    res.media = {
+        "log": {
+                "msg": msg,
+                "stderr": stderr != None
+            }
+        }
 
 
 if __name__ == "__main__":
-    disable_debug = os.getenv("K8S_DEBUGKIT_DISABLE_FLASK_DEBUG_MODE")
-    app.run(debug=False if disable_debug != None else True, host="0.0.0.0", port=80)
+    disable_debug = os.getenv("K8S_DEBUGKIT_DISABLE_DEBUG_MODE")
+    api.run(debug=False if disable_debug != None else True, address="0.0.0.0", port=80)

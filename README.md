@@ -132,26 +132,26 @@ Get all environmental values
 ### Command execution
 You can execute commands (from container!) via HTTP GET
 
-#### `/exec/ping/<dst>`
+#### `/exec/ping/{dst}`
 ping to dst
 
-#### `/exec/dig/<dst>`
+#### `/exec/dig/{dst}`
 Resolve name by default name server
 
-#### `/exec/traceroute/<dst>`
+#### `/exec/traceroute/{dst}`
 traceroute to dst
 
-#### `/exec/get/<dst>`
+#### `/exec/get/{dst}`
 Exec a http get request to dst
 
-#### `/exec/ls/<path>`
+#### `/exec/ls/{path}`
 List files
 
-#### `/exec/getenv/<name>`
+#### `/exec/getenv/{name}`
 Get an environmental value by name
 
-#### `/exec/log/<contents>?<mode>`
-Print log by specified mode (`debug`/`info`/`warn`/`error`/`critical`)
+#### `/exec/log/{msg}?{stderr}`
+Print log to stdout. If set stderr, output to stderr.
 
 #### `/exec/echo/<dst>`
 echo POST data
@@ -171,5 +171,5 @@ You can directly use the CLI tools below on container by `kubectl exec -it {pod_
 
 
 ## Options
-* `K8S_DEBUGKIT_DISABLE_FLASK_DEBUG_MODE`
+* `K8S_DEBUGKIT_DISABLE_DEBUG_MODE`
   * If set, run in production mode
