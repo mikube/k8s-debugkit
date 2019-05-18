@@ -4,6 +4,7 @@ import subprocess
 from psutil import virtual_memory
 import requests
 import re
+import sys
 
 app = Flask(__name__)
 
@@ -25,7 +26,8 @@ def index():
             "/exec/traceroute/<dst>",
             "/exec/get/<path:dst>",
             "/exec/ls/<path:path>",
-            "/exec/getenv/<name>"]
+            "/exec/getenv/<name>",
+            "/exec/log/<path:contents>?<mode>"]
     }
     return jsonify(res)
 
@@ -277,6 +279,32 @@ def env(name=None):
     return jsonify({
         "hostname": __hostname(),
         name: os.getenv(name)
+    })
+
+
+@app.route("/exec/log/<path:contents>")
+def log(contents=None):
+    """
+    Print log
+    """
+    mode = request.args.get("mode", default="debug")
+    if mode == "debug":
+        app.logger.debug(contents)
+    elif mode == "info":
+        app.logger.info(contents)
+    elif mode == "warn":
+        app.logger.warn(contents)
+    elif mode == "error":
+        app.logger.error(contents)
+    elif mode == "critical":
+        app.logger.critical(contents)
+    else:
+        mode = "debug"
+        app.logger.debug(contents)
+    return jsonify({
+        "hostname": __hostname(),
+        "log": contents,
+        "mode": mode
     })
 
 

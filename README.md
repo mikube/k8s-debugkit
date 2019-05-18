@@ -147,6 +147,9 @@ List files
 #### `/exec/getenv/<name>`
 Get an environmental value by name
 
+#### `/exec/log/<contents>?<mode>`
+Print log by specified mode (`debug`/`info`/`warn`/`error`/`critical`)
+
 #### `/exec/echo/<dst>`
 echo POST data
 
