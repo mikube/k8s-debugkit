@@ -7,7 +7,7 @@ All-in-one docker image for debugging on Kubernetes and Docker
 
 # :soon: Use cases
 ```sh
-kubectl create deploy --image=amaya382/k8s-debugkit debugkit
+kubectl create deploy --image=mikube/k8s-debugkit debugkit
 kubectl expose --port=80 --type={type you need} deploy debugkit
 ```
 
