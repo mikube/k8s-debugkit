@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - image: amaya382/k8s-debugkit:latest
-        imagePullPolicy: Always
+        imagePullPolicy: always
         name: k8s-debugkit
 ---
 apiVersion: v1
